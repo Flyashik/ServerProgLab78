@@ -29,4 +29,11 @@ const (
 	AddPowerForHero = `INSERT INTO superhero.hero_power (hero_id, power_id)
 						VALUES ((SELECT id FROM superhero.superhero WHERE superhero_name = ($1)), 
 						        (SELECT id FROM superhero.superpower WHERE power_name = ($2)))`
+
+	GetUserAuth = `SELECT * FROM public.users WHERE username = ($1) AND password = ($2) LIMIT 1`
+
+	GetUserByID = `SELECT * FROM public.users WHERE id = ($1) LIMIT 1`
+
+	CreateUser = `INSERT INTO public.users (name, username, password, role)
+				  VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`
 )

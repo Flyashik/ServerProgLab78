@@ -55,11 +55,15 @@ func (s *Server) configureLogger() error {
 }
 
 func (s *Server) configureRouter() {
-	s.router.HandleFunc("/superhero", s.handleSuperhero())
-	s.router.HandleFunc("/add_superpower", s.handleAddSuperpower())
-	s.router.HandleFunc("/delete_superpower", s.handleDeleteSuperpower())
-	s.router.HandleFunc("/change_superpower", s.handleChangeSuperpower())
-	s.router.HandleFunc("/add_power_hero", s.handleAddPowerForHero())
+	s.router.HandleFunc("api/superhero", s.handleSuperhero())
+	s.router.HandleFunc("api/add_superpower", s.handleAddSuperpower())
+	s.router.HandleFunc("api/delete_superpower", s.IsAuthorized(s.handleDeleteSuperpower()))
+	s.router.HandleFunc("api/change_superpower", s.handleChangeSuperpower())
+	s.router.HandleFunc("api/add_power_hero", s.handleAddPowerForHero())
+
+	s.router.HandleFunc("/api/login", s.LoginHandler())
+	s.router.HandleFunc("/api/logout", s.LogoutHandler())
+	s.router.HandleFunc("/api/register", s.IsAuthorized(s.RegisterHandler()))
 }
 
 func (s *Server) configureStorage() error {
@@ -154,6 +158,13 @@ func (s *Server) handleAddSuperpower() http.HandlerFunc {
 
 func (s *Server) handleDeleteSuperpower() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		role := r.Context().Value("role").(string)
+		if role != "admin" {
+			s.logger.Error("User hasn't access")
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			s.logger.Error(err)
